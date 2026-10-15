@@ -1,7 +1,7 @@
 class CompterTui < Formula
   desc "Terminal UI Accounting Application"
   homepage "https://github.com/harisr92/accounting-tui"
-  version "0.1.0"
+  version "0.1.1"
 
   on_macos do
     if Hardware::CPU.arm?
