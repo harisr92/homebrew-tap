@@ -1,15 +1,15 @@
 class CompterTui < Formula
   desc "Terminal UI Accounting Application"
   homepage "https://github.com/harisr92/accounting-tui"
-  version "0.2.0"
+  version "0.2.3"
 
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/harisr92/accounting-tui/releases/download/v#{version}/compter-tui-macos-arm64.tar.gz"
-      sha256 "96845dc39f9b87bff930c7ace6271c211c2a66621a354d1becdf76a85382535c"
+      sha256 "ce387fd7a7f13e660765c69e63798c2a469debdda320e92b71d46c8115bf614b"
     else
       url "https://github.com/harisr92/accounting-tui/releases/download/v#{version}/compter-tui-macos-x86_64.tar.gz"
-      sha256 "1385ec0ea84e09dbc5248430f34049d2fb43c44372345bb63386d3f1c55ec3fb"
+      sha256 "ffe74fc5cb6011149b2a001924ed138ebbaeb00e2d6aa4a07e3e4dec83028cf1"
     end
   end
 
