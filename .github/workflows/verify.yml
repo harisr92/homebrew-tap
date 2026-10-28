@@ -1,0 +1,62 @@
+name: Verify formulae
+
+on:
+  push:
+    branches: [main]
+    paths: ["Formula/**", ".github/workflows/verify.yml"]
+  pull_request:
+    paths: ["Formula/**", ".github/workflows/verify.yml"]
+  workflow_dispatch:
+
+jobs:
+  checksums:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify sha256 of every url in each formula
+        run: |
+          set -euo pipefail
+          status=0
+          for formula in Formula/*.rb; do
+            echo "== $formula"
+            version=$(sed -nE 's/^ *version "([^"]+)".*/\1/p' "$formula")
+            # Pair each url line with the sha256 line that follows it.
+            awk '/^ *url "/ { gsub(/.*url "|".*/, ""); url=$0 }
+                 /^ *sha256 "/ { gsub(/.*sha256 "|".*/, ""); print url, $0 }' "$formula" |
+            while read -r url expected; do
+              url=${url//\#\{version\}/$version}
+              actual=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+              if [ "$actual" = "$expected" ]; then
+                echo "ok   $url"
+              else
+                echo "::error file=$formula::sha256 mismatch for $url (expected $expected, got $actual)"
+                exit 1
+              fi
+            done || status=1
+          done
+          exit $status
+
+  install:
+    needs: checksums
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tap this repo
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/harisr92/homebrew-tap"
+          mkdir -p "$(dirname "$tap_dir")"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+
+      - name: Install and test
+        run: |
+          for formula in Formula/*.rb; do
+            name=$(basename "$formula" .rb)
+            brew install --formula "harisr92/tap/$name"
+            brew test "harisr92/tap/$name"
+          done
